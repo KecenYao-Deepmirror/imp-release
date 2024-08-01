@@ -1,7 +1,7 @@
 reader:
   name: standard
-  rawdata_dir: /scratches/flyer_3/fx221/dataset/scannet_eval_release/data
-  dataset_dir: /scratches/flyer_3/fx221/dataset/scannet_eval_release/eval/scannet_sp_1000.hdf5
+  rawdata_dir: /mnt/nas/share-all/kecen/data/scannet_eval_release/data
+  dataset_dir: /mnt/nas/share-all/kecen/data/scannet_eval_release/dataset/scannet_sp_1000.hdf5
   num_kpt: 1000
 
 matcher:

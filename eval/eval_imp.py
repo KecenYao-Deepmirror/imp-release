@@ -22,6 +22,7 @@ from components.utils.metrics import compute_epi_inlier
 from tools.utils import compute_pose_error, pose_auc
 from eval.pose_estimation import estimate_pose
 from eval.matching import matching_iterative, matching_iterative_uncertainty
+import time
 
 parser = argparse.ArgumentParser(description='IMP', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument('--matching_method', type=str, default='IMP')
@@ -38,6 +39,8 @@ def eval(model):
     precisions = []
     matching_scores = []
     num_iterations = np.zeros(shape=(nI + 1, 1), dtype=int)
+    inference_times = []  # Initialize list to store inference times
+
 
     for index in tqdm(range(len(reader_loader)), total=len(reader_loader)):
         info = reader.run(index=index)
@@ -91,6 +94,8 @@ def eval(model):
             'pose': 1.5,
         }
 
+        start_time = time.time()  # Start timing
+
         if use_iterative:
             if use_uncertainty:
                 pts0, pts1, norm_pts0, norm_pts1, matches, conf, pred_R, pred_t, ni = matching_iterative_uncertainty(
@@ -115,7 +120,9 @@ def eval(model):
                     method=cv2.USAC_MAGSAC,
                     min_kpts=25,
                 )
-
+            end_time = time.time()  # End timing
+            inference_time = end_time - start_time
+            
             valid = (matches > -1)
             mconf = conf[valid]
             pred_matches = np.vstack([np.where(matches > -1), matches[valid]]).transpose()
@@ -149,6 +156,8 @@ def eval(model):
             for v in range(nI):
                 if ni <= v + 1:
                     num_iterations[v + 1] += 1
+            
+
         else:
             pred_R = None
             pred_t = None
@@ -171,6 +180,9 @@ def eval(model):
                 # mscore_th=0.1,
                 # uncertainty_ratio=1.,
             )
+            end_time = time.time()  # End timing
+            inference_time = end_time - start_time
+
             indices0 = match_out['indices0']
             mscores0 = match_out['mscores0']
             # print(indices0.shape, mscores0.shape)
@@ -215,6 +227,7 @@ def eval(model):
         pose_errors.append(np.max([err_R, err_t]))
         precisions.append(precision)
         matching_scores.append(matching_score)
+        inference_times.append(inference_time)
         aucs = pose_auc(pose_errors, thresholds)
         aucs = [100. * yy for yy in aucs]
         prec = 100. * np.mean(precisions)
@@ -223,8 +236,9 @@ def eval(model):
         print('AUC@5\t AUC@10\t AUC@20\t AUC@50\t Prec\t MScore\t Mkpts \t Ikpts')
         print('{:.2f}\t {:.2f}\t {:.2f}\t {:.2f}\t {:.2f}\t {:.2f}\t'.format(
             aucs[0], aucs[1], aucs[2], aucs[3], prec, ms))
-        for ni in range(nI):
-            print('It {:d} with {:.2f}'.format(ni + 1, num_iterations[ni + 1, 0] / len(pose_errors)))
+        print("Inference Time:{:.2f} s".format(np.mean(inference_times)))
+        # for ni in range(nI):
+        #     print('It {:d} with {:.2f}'.format(ni + 1, num_iterations[ni + 1, 0] / len(pose_errors)))
 
 
 if __name__ == '__main__':

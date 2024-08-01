@@ -1,7 +1,7 @@
 reader:
   name: standard
-  rawdata_dir: /scratches/flyer_3/fx221/dataset/YFCC/data
-  dataset_dir: /scratches/flyer_3/fx221/dataset/YFCC/eval/yfcc_sp_2000.hdf5
+  rawdata_dir: /mnt/nas/share-all/kecen/data/yfcc/raw_data/raw_data
+  dataset_dir: /mnt/nas/share-all/kecen/data/yfcc/dataset/yfcc_sp_2000.hdf5
   num_kpt: 2000
   
 matcher:
